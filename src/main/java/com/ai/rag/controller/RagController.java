@@ -1,10 +1,15 @@
 package com.ai.rag.controller;
 
 import com.ai.rag.service.RagService;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
 
 import java.io.File;
+import java.time.Duration;
+import java.util.List;
 
 @RestController
 @RequestMapping("/rag")
@@ -32,9 +37,14 @@ public class RagController {
         return "File uploaded and processed!";
     }
 
-    @GetMapping("/ask")
+    @PostMapping("/ask")
     public String ask(@RequestBody String question) {
         return ragService.ask(question);
+    }
+
+    @PostMapping(value = "/ask/stream",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> askStream(@RequestBody String question) {
+        return ragService.askStream(question).delayElements(Duration.ofMillis(10));
     }
 }
 

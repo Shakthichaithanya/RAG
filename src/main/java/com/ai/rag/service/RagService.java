@@ -1,12 +1,15 @@
 package com.ai.rag.service;
 
 import org.apache.tika.exception.TikaException;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.vectorstore.mariadb.MariaDBVectorStore;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
+import javax.print.Doc;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,6 +62,19 @@ public class RagService {
         Prompt prompt = new Prompt("Context:\n" + context + "\n\nQuestion: " + question);
 
         return chatModel.call(prompt).getResult().getOutput().getText();
+    }
+
+    public Flux<String> askStream(String question) {
+        List<Document> results = vectorStore.similaritySearch(question);
+
+        String context = results.stream()
+                .map(Document::getText)
+                .collect(Collectors.joining("\n"));
+
+        Prompt prompt = new Prompt("Context:\n" + context + "\n\nQuestion: " + question);
+
+        return chatModel.stream(prompt).concatWithValues().map(ch -> ch.getResult().getOutput().getText());
+
     }
 
     private List<String> splitText(String text, int chunkSize) {
