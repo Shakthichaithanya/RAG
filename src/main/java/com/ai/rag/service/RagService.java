@@ -67,7 +67,6 @@ public class RagService {
     public Flux<String> askStream(String question) {
         List<Document> results = vectorStore.similaritySearch(question);
 
-
         String context = results.stream()
                 .map(Document::getText)
                 .collect(Collectors.joining("\n"));
